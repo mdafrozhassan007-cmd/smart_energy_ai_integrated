@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartEnergy - Institutional Platform</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+                        coe: { purple: '#6d28d9', teal: '#0d9488', sky: '#0ea5e9' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .toggle-dot { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .toggle-bg { transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(109, 40, 217, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0); }
+        }
+        .live-indicator { animation: pulse-ring 2s infinite; }
+        
+        /* Highlight gradient for savings - COE Theme */
+        .savings-bg {
+            background: linear-gradient(135deg, #4c1d95 0%, #0d9488 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex font-sans antialiased">
+
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col h-full z-20 flex-shrink-0 transition-transform duration-300 md:translate-x-0 absolute md:relative -translate-x-full shadow-lg md:shadow-none" id="sidebar">
+        <div class="h-20 flex items-center px-6 border-b border-slate-100 bg-slate-50">
+            <div class="flex flex-col w-full">
+                <span class="text-[10px] font-bold text-sky-500 tracking-wider mb-1">ANUDIP</span>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-purple-700 text-xl"></i>
+                    <div class="flex flex-col leading-none">
+                        <span class="text-xs font-black text-purple-700 tracking-widest uppercase">Centre of</span>
+                        <span class="text-[10px] font-bold text-white bg-teal-500 px-1.5 py-0.5 mt-0.5 tracking-wider rounded-sm uppercase">Excellence for AI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 py-6 flex flex-col gap-2">
+            <button id="nav-dashboard" onclick="switchView('dashboard')" class="nav-btn w-full flex items-center px-6 py-3 text-left bg-purple-50 text-purple-700 border-r-4 border-purple-600 transition-colors">
+                <i class="fa-solid fa-chart-pie w-6 text-center mr-3"></i>
+                <span class="font-semibold text-sm">Dashboard</span>
+            </button>
+            <button id="nav-devices" onclick="switchView('devices')" class="nav-btn w-full flex items-center px-6 py-3 text-left text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-server w-6 text-center mr-3"></i>
+                <span class="font-semibold text-sm">Device Matrix</span>
+            </button>
+            <button id="nav-insights" onclick="switchView('insights')" class="nav-btn w-full flex items-center px-6 py-3 text-left text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-lightbulb w-6 text-center mr-3"></i>
+                <span class="font-semibold text-sm">Insights & Patterns</span>
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-slate-100">
+            <div class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors">
+                <div class="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
+                    COE
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 truncate">System Admin</p>
+                    <p class="text-xs text-slate-500 truncate">Main Campus</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 z-10 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-slate-500 hover:text-slate-700" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900" id="header-title">Executive Dashboard</h2>
+                    <p class="text-xs text-slate-500 font-medium">Real-time Campus Analytics</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 sm:gap-6">
+                <!-- Live Sensor Toggle -->
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 cursor-pointer hover:bg-slate-100 transition" onclick="toggleLiveSensors()">
+                    <div id="live-dot" class="w-2.5 h-2.5 bg-purple-600 rounded-full live-indicator"></div>
+                    <span id="live-text" class="text-xs font-bold text-slate-700">Sensors: LIVE</span>
+                </div>
+                
+                <!-- Notifier Bell -->
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="w-10 h-10 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center justify-center relative focus:outline-none bg-white">
+                        <i class="fa-regular fa-bell"></i>
+                        <span id="notif-badge" class="absolute top-2 right-2 flex h-3 w-3 hidden">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-600 border border-white"></span>
+                        </span>
+                    </button>
+                    
+                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-rose-200 z-50 overflow-hidden">
+                        <div class="bg-rose-50 px-4 py-3 border-b border-rose-100 flex justify-between items-center">
+                            <span class="font-black text-rose-900 text-sm tracking-wide uppercase">Critical Alerts</span>
+                            <span class="text-xs bg-rose-600 text-white px-2 py-0.5 rounded-full font-bold shadow-sm" id="notif-count">0</span>
+                        </div>
+                        <div id="notif-list" class="max-h-80 overflow-y-auto divide-y divide-rose-100">
+                            <!-- Alerts injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-auto p-4 sm:p-8 relative bg-slate-50/50">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="app-view max-w-6xl mx-auto space-y-6 block animate-fade-in">
+                
+                <!-- Dynamic Alert Banner Container -->
+                <div id="dashboard-alert-container"></div>
+                
+                <!-- Highlighted Savings Card -->
+                <div class="savings-bg rounded-3xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-8">
+                    <!-- Decorative background pattern -->
+                    <div class="absolute right-0 top-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+                        <i class="fa-solid fa-leaf text-[200px]"></i>
+                    </div>
+                    
+                    <div class="relative z-10 flex-1">
+                        <span class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-4 inline-block">Estimated Avoidable Cost</span>
+                        <h2 class="text-5xl sm:text-7xl font-extrabold tracking-tight mb-2 flex items-baseline">
+                            <span class="text-3xl sm:text-5xl font-medium opacity-80 mr-1">₹</span><span id="kpi-daily-savings">0</span>
+                            <span class="text-lg font-medium opacity-80 ml-2">/ day</span>
+                        </h2>
+                        <p class="text-emerald-100 font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation text-amber-300"></i>
+                            Waste identified across <span id="kpi-wasted-rooms" class="font-bold text-white">0</span> unoccupied spaces.
+                        </p>
+                    </div>
+                    
+                    <div class="relative z-10 w-full sm:w-auto bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex flex-col gap-4">
+                        <div>
+                            <p class="text-emerald-200/80 text-xs font-bold uppercase tracking-wider mb-1">Monthly Projection</p>
+                            <p class="text-2xl font-bold">₹<span id="kpi-monthly-savings">0</span></p>
+                        </div>
+                        <div class="h-px w-full bg-white/10"></div>
+                        <div>
+                            <p class="text-emerald-200/80 text-xs font-bold uppercase tracking-wider mb-1">Yearly Projection</p>
+                            <p class="text-2xl font-bold">₹<span id="kpi-yearly-savings">0</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Secondary KPIs -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-bold tracking-wide uppercase mb-1">Live Campus Load</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-load">0.0 <span class="text-lg text-slate-400 font-medium">kW</span></h3>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-500 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-smog"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-bold tracking-wide uppercase mb-1">Daily CO₂ Reduction</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-co2">0 <span class="text-lg text-slate-400 font-medium">kg</span></h3>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-microchip"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-500 font-bold tracking-wide uppercase mb-1">Active Endpoints</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-devices">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Power Consumption Graph -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-fade-in" style="animation-delay: 0.1s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">Live Power Consumption (kW)</h3>
+                        <div class="flex gap-4">
+                            <span class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                <span class="w-3 h-3 rounded-full bg-purple-600 shadow-sm shadow-purple-200"></span> Total Campus Load
+                            </span>
+                            <span class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                <span class="w-3 h-3 rounded-full bg-teal-500 shadow-sm shadow-teal-200"></span> Wasted Load
+                            </span>
+                        </div>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="consumptionChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VIEW: DEVICES -->
+            <div id="view-devices" class="app-view hidden max-w-6xl mx-auto space-y-6 animate-fade-in">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Hardware & Sensor Matrix</h3>
+                        <p class="text-sm text-slate-500">Live monitoring of all configured institutional devices.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <button onclick="openSensorModal()" class="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 border border-emerald-200">
+                            <i class="fa-solid fa-satellite-dish"></i> Deploy Sensor Set
+                        </button>
+                        <button onclick="openDeviceModal()" class="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-plus"></i> Provision Hardware
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Devices Grid (Populated by JS) -->
+                <div id="devices-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <!-- VIEW: INSIGHTS & PATTERNS -->
+            <div id="view-insights" class="app-view hidden max-w-6xl mx-auto space-y-8 animate-fade-in">
+                
+                <!-- AI Suggestions Section -->
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> AI Optimization Suggestions
+                    </h3>
+                    <div id="insights-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- AI Cards injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Custom Usage Patterns Section -->
+                <div class="pt-6 border-t border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-blue-500"></i> Custom Usage Patterns
+                    </h3>
+                    <p class="text-sm text-slate-500 mb-6">Activate global rules to enforce sustainability policies across the institution.</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Pattern 1 -->
+                        <div class="bg-white rounded-2xl p-6 border-2 border-purple-600 shadow-md relative overflow-hidden flex flex-col">
+                            <div class="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">ACTIVE</div>
+                            <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center text-xl mb-4">
+                                <i class="fa-solid fa-moon"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">After-Hours Eco Mode</h4>
+                            <p class="text-sm text-slate-500 mt-2 flex-1">Automatically forces all non-essential ACs and Lights off between 8:00 PM and 6:00 AM.</p>
+                            <div class="mt-6">
+                                <button class="w-full bg-slate-50 text-purple-700 font-bold text-sm py-2 rounded-lg border border-purple-200 pointer-events-none">
+                                    <i class="fa-solid fa-check mr-1"></i> Running Globally
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pattern 2 -->
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-400 transition-colors shadow-sm flex flex-col group cursor-pointer" onclick="togglePattern(this)">
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Weekend Deep Shutdown</h4>
+                            <p class="text-sm text-slate-500 mt-2 flex-1">Cuts power to smart plugs (Computers, Smart Monitors) to eliminate phantom load on Saturdays and Sundays.</p>
+                            <div class="mt-6">
+                                <button class="pattern-btn w-full bg-slate-900 text-white font-bold text-sm py-2 rounded-lg transition-colors">
+                                    Activate Pattern
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pattern 3 -->
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 hover:border-amber-400 transition-colors shadow-sm flex flex-col group cursor-pointer" onclick="togglePattern(this)">
+                            <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-temperature-arrow-down"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800">Exam Week Capping</h4>
+                            <p class="text-sm text-slate-500 mt-2 flex-1">Caps all connected ACs at 24°C regardless of remote inputs, prioritizing steady load during high-occupancy exam periods.</p>
+                            <div class="mt-6">
+                                <button class="pattern-btn w-full bg-slate-900 text-white font-bold text-sm py-2 rounded-lg transition-colors">
+                                    Activate Pattern
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ADD DEVICE MODAL -->
+    <div id="device-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Add Infrastructure</h3>
+                    <p class="text-sm text-slate-500 mt-1">Bind new hardware to the platform.</p>
+                </div>
+                <button onclick="closeDeviceModal()" class="w-10 h-10 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleAddDevice(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Location / Zone</label>
+                    <select id="modal-room" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                        <option value="Theory Room">Theory Room</option>
+                        <option value="Lab Practical">Lab Practical</option>
+                        <option value="Incubation room">Incubation room</option>
+                        <option value="Cafeteria">Cafeteria</option>
+                        <option value="Staff Room">Staff Room</option>
+                        <option value="Board Room">Board Room</option>
+                        <option value="Washroom">Washroom</option>
+                        <option value="Reception">Reception</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Appliance Class</label>
+                        <select id="modal-type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                            <option value="AC">Air Conditioner</option>
+                            <option value="Fan">Ceiling Fan</option>
+                            <option value="Exhaust Fan">Exhaust Fan</option>
+                            <option value="Light">Lighting</option>
+                            <option value="Computer">Computer</option>
+                            <option value="Server">Main Server</option>
+                            <option value="Fridge">Refrigerator</option>
+                            <option value="Smart Monitor">Smart Monitor</option>
+                            <option value="Mic">Microphone System</option>
+                            <option value="Purifier">Air Purifier</option>
+                            <option value="Camera">Security Camera</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Sensor / Meter Type</label>
+                        <select id="modal-meter" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                            <option value="Smart Meter">Smart Meter</option>
+                            <option value="Smart Plug">Smart Plug</option>
+                            <option value="CT Sensor">CT Sensor</option>
+                            <option value="IoT Relay">IoT Relay</option>
+                            <option value="PIR Sensor">PIR Sensor</option>
+                            <option value="mmWave">mmWave Presence</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Network ID (Wi-Fi MAC / IP)</label>
+                    <input type="text" id="modal-network-id" placeholder="Leave blank to auto-generate" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nominal Power Draw (kW)</label>
+                    <input type="number" id="modal-power" step="0.1" min="0" value="1.5" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 flex gap-3">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 transition-all flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-link"></i> Bind Device
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DEPLOY SENSOR SET MODAL -->
+    <div id="sensor-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Deploy Sensor Set</h3>
+                    <p class="text-sm text-slate-500 mt-1">Outfit a room with a bundled sensor array.</p>
+                </div>
+                <button onclick="closeSensorModal()" class="w-10 h-10 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleAddSensorSet(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Target Location</label>
+                    <select id="sensor-modal-room" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                        <option value="Theory Room">Theory Room</option>
+                        <option value="Lab Practical">Lab Practical</option>
+                        <option value="Incubation room">Incubation room</option>
+                        <option value="Cafeteria">Cafeteria</option>
+                        <option value="Staff Room">Staff Room</option>
+                        <option value="Board Room">Board Room</option>
+                        <option value="Washroom">Washroom</option>
+                        <option value="Reception">Reception</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Sensor Bundle Configuration</label>
+                    <select id="sensor-modal-bundle" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                        <option value="Basic Occupancy">Basic Occupancy (PIR + Light Sensor)</option>
+                        <option value="Advanced Environment">Advanced Environment (mmWave + Temp/Humidity + Air Quality)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Gateway Network ID (Wi-Fi)</label>
+                    <input type="text" id="sensor-modal-network-id" placeholder="Leave blank to auto-generate" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium text-slate-700">
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 flex gap-3">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 transition-all flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-satellite-dish"></i> Deploy Bundle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const ELECTRICITY_RATE = 8.0; // ₹8 per kWh
+        const CO2_FACTOR = 0.82;      // kg CO2 per kWh
+        const DAILY_WASTE_HOURS = 8;  // Assumption: devices left on for 8 hrs unattended
+
+        // Helper to generate mock Wi-Fi MAC addresses if not provided
+        const generateMAC = () => "XX:XX:XX:XX:XX:XX".replace(/X/g, () => "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16)));
+
+        // --- LAYER 1: MOCK DATABASE (Rooms & Devices) ---
+        let rooms = [
+            { id: 'RM-TH1', name: 'Theory Room', capacity: 60, occupancy: 0 },
+            { id: 'RM-LAB1', name: 'Lab Practical', capacity: 40, occupancy: 5 },
+            { id: 'RM-INC1', name: 'Incubation room', capacity: 20, occupancy: 0 },
+            { id: 'RM-CAF1', name: 'Cafeteria', capacity: 150, occupancy: 0 },
+            { id: 'RM-STF1', name: 'Staff Room', capacity: 30, occupancy: 2 },
+            { id: 'RM-BRD1', name: 'Board Room', capacity: 15, occupancy: 0 },
+            { id: 'RM-WSH1', name: 'Washroom', capacity: 10, occupancy: 0 },
+            { id: 'RM-REC1', name: 'Reception', capacity: 20, occupancy: 5 }
+        ];
+
+        // Device configuration crafted based on specific room rules
+        let devices = [
+            // Theory Room (0 occ - Huge waste)
+            { id: 'AC-TH1-01', roomId: 'RM-TH1', name: 'AC 1', type: 'AC', status: 'ON', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'A1:B2:C3:D4:E5:01' },
+            { id: 'AC-TH1-02', roomId: 'RM-TH1', name: 'AC 2', type: 'AC', status: 'ON', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'A1:B2:C3:D4:E5:02' },
+            { id: 'FAN-TH1-01', roomId: 'RM-TH1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'A1:B2:C3:D4:E5:03' },
+            { id: 'FAN-TH1-02', roomId: 'RM-TH1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'A1:B2:C3:D4:E5:04' },
+            { id: 'FAN-TH1-03', roomId: 'RM-TH1', name: 'Fan 3', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'A1:B2:C3:D4:E5:05' },
+            { id: 'MON-TH1-01', roomId: 'RM-TH1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'ON', powerKw: 0.2, meterType: 'Smart Plug', networkId: 'A1:B2:C3:D4:E5:06' },
+            { id: 'LGT-TH1-01', roomId: 'RM-TH1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.6, meterType: 'IoT Relay', networkId: 'A1:B2:C3:D4:E5:07' },
+
+            // Lab Practical (5 occ out of 40 - Low occupancy waste)
+            { id: 'AC-LAB1-01', roomId: 'RM-LAB1', name: 'AC 1', type: 'AC', status: 'ON', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'B2:C3:D4:E5:F6:01' },
+            { id: 'AC-LAB1-02', roomId: 'RM-LAB1', name: 'AC 2', type: 'AC', status: 'ON', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'B2:C3:D4:E5:F6:02' },
+            { id: 'FAN-LAB1-01', roomId: 'RM-LAB1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B2:C3:D4:E5:F6:03' },
+            { id: 'FAN-LAB1-02', roomId: 'RM-LAB1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B2:C3:D4:E5:F6:04' },
+            { id: 'FAN-LAB1-03', roomId: 'RM-LAB1', name: 'Fan 3', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B2:C3:D4:E5:F6:05' },
+            { id: 'MON-LAB1-01', roomId: 'RM-LAB1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'ON', powerKw: 0.2, meterType: 'Smart Plug', networkId: 'B2:C3:D4:E5:F6:06' },
+            { id: 'PC-LAB1-ALL', roomId: 'RM-LAB1', name: 'Student PCs (x40)', type: 'Computer', status: 'ON', powerKw: 4.0, meterType: 'CT Sensor', networkId: 'B2:C3:D4:E5:F6:07' }, // 40 computers grouped
+            { id: 'LGT-LAB1-01', roomId: 'RM-LAB1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.8, meterType: 'IoT Relay', networkId: 'B2:C3:D4:E5:F6:08' },
+
+            // Incubation room (0 occ)
+            { id: 'AC-INC1-01', roomId: 'RM-INC1', name: 'AC 1', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'C3:D4:E5:F6:A7:01' },
+            { id: 'AC-INC1-02', roomId: 'RM-INC1', name: 'AC 2', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'C3:D4:E5:F6:A7:02' },
+            { id: 'FAN-INC1-01', roomId: 'RM-INC1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'C3:D4:E5:F6:A7:03' },
+            { id: 'FAN-INC1-02', roomId: 'RM-INC1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'C3:D4:E5:F6:A7:04' },
+            { id: 'FAN-INC1-03', roomId: 'RM-INC1', name: 'Fan 3', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'C3:D4:E5:F6:A7:05' },
+            { id: 'MON-INC1-01', roomId: 'RM-INC1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'ON', powerKw: 0.2, meterType: 'Smart Plug', networkId: 'C3:D4:E5:F6:A7:06' },
+            { id: 'LGT-INC1-01', roomId: 'RM-INC1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.4, meterType: 'IoT Relay', networkId: 'C3:D4:E5:F6:A7:07' },
+
+            // Cafeteria (Only 2 fans + fridge + lights)
+            { id: 'FAN-CAF1-01', roomId: 'RM-CAF1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'D4:E5:F6:A7:B8:01' },
+            { id: 'FAN-CAF1-02', roomId: 'RM-CAF1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'D4:E5:F6:A7:B8:02' },
+            { id: 'FRG-CAF1-01', roomId: 'RM-CAF1', name: 'Fridge 1', type: 'Fridge', status: 'ON', powerKw: 1.5, meterType: 'Smart Plug', networkId: 'D4:E5:F6:A7:B8:03' }, 
+            { id: 'LGT-CAF1-01', roomId: 'RM-CAF1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 1.0, meterType: 'IoT Relay', networkId: 'D4:E5:F6:A7:B8:04' },
+
+            // Staff Room (2 occ out of 30)
+            { id: 'AC-STF1-01', roomId: 'RM-STF1', name: 'AC 1', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'E5:F6:A7:B8:C9:01' },
+            { id: 'AC-STF1-02', roomId: 'RM-STF1', name: 'AC 2', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'E5:F6:A7:B8:C9:02' },
+            { id: 'FAN-STF1-01', roomId: 'RM-STF1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'E5:F6:A7:B8:C9:03' },
+            { id: 'FAN-STF1-02', roomId: 'RM-STF1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'E5:F6:A7:B8:C9:04' },
+            { id: 'FAN-STF1-03', roomId: 'RM-STF1', name: 'Fan 3', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'E5:F6:A7:B8:C9:05' },
+            { id: 'MON-STF1-01', roomId: 'RM-STF1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'ON', powerKw: 0.2, meterType: 'Smart Plug', networkId: 'E5:F6:A7:B8:C9:06' },
+            { id: 'PC-STF1-FAC', roomId: 'RM-STF1', name: 'Faculty PCs (x4)', type: 'Computer', status: 'ON', powerKw: 0.6, meterType: 'Smart Plug', networkId: 'E5:F6:A7:B8:C9:07' }, // 4 faculty systems
+            { id: 'LGT-STF1-01', roomId: 'RM-STF1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.4, meterType: 'IoT Relay', networkId: 'E5:F6:A7:B8:C9:08' },
+            
+            // Board Room (0 occ, perfectly managed - Equipment OFF except Server)
+            { id: 'AC-BRD1-01', roomId: 'RM-BRD1', name: 'AC 1', type: 'AC', status: 'OFF', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'F6:A7:B8:C9:D0:01' },
+            { id: 'AC-BRD1-02', roomId: 'RM-BRD1', name: 'AC 2', type: 'AC', status: 'OFF', powerKw: 2.5, meterType: 'Smart Meter', networkId: 'F6:A7:B8:C9:D0:02' },
+            { id: 'FAN-BRD1-01', roomId: 'RM-BRD1', name: 'Fan 1', type: 'Fan', status: 'OFF', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'F6:A7:B8:C9:D0:03' },
+            { id: 'FAN-BRD1-02', roomId: 'RM-BRD1', name: 'Fan 2', type: 'Fan', status: 'OFF', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'F6:A7:B8:C9:D0:04' },
+            { id: 'FAN-BRD1-03', roomId: 'RM-BRD1', name: 'Fan 3', type: 'Fan', status: 'OFF', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'F6:A7:B8:C9:D0:05' },
+            { id: 'MON-BRD1-01', roomId: 'RM-BRD1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'OFF', powerKw: 0.3, meterType: 'Smart Plug', networkId: 'F6:A7:B8:C9:D0:06' },
+            { id: 'SRV-BRD1-01', roomId: 'RM-BRD1', name: 'Main Server', type: 'Server', status: 'ON', powerKw: 1.2, meterType: 'Smart Plug', networkId: 'F6:A7:B8:C9:D0:07' }, // Server always ON
+            { id: 'PC-BRD1-01', roomId: 'RM-BRD1', name: 'Board PC 1', type: 'Computer', status: 'OFF', powerKw: 0.15, meterType: 'Smart Plug', networkId: 'F6:A7:B8:C9:D0:08' },
+            { id: 'LGT-BRD1-01', roomId: 'RM-BRD1', name: 'Light 1', type: 'Light', status: 'OFF', powerKw: 0.5, meterType: 'IoT Relay', networkId: 'F6:A7:B8:C9:D0:09' },
+            
+            // Washroom (Only exhaust fan + lights/purifier)
+            { id: 'FAN-WSH1-EXH', roomId: 'RM-WSH1', name: 'Exhaust Fan 1', type: 'Exhaust Fan', status: 'ON', powerKw: 0.05, meterType: 'IoT Relay', networkId: 'A7:B8:C9:D0:E1:01' },
+            { id: 'LGT-WSH1-01', roomId: 'RM-WSH1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.3, meterType: 'IoT Relay', networkId: 'A7:B8:C9:D0:E1:02' },
+            { id: 'PUR-WSH1-01', roomId: 'RM-WSH1', name: 'Air Purifier 1', type: 'Purifier', status: 'ON', powerKw: 0.8, meterType: 'Smart Plug', networkId: 'A7:B8:C9:D0:E1:03' },
+            
+            // Reception (5 occ)
+            { id: 'AC-REC1-01', roomId: 'RM-REC1', name: 'AC 1', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'B8:C9:D0:E1:F2:01' },
+            { id: 'AC-REC1-02', roomId: 'RM-REC1', name: 'AC 2', type: 'AC', status: 'ON', powerKw: 2.0, meterType: 'Smart Meter', networkId: 'B8:C9:D0:E1:F2:02' },
+            { id: 'FAN-REC1-01', roomId: 'RM-REC1', name: 'Fan 1', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B8:C9:D0:E1:F2:03' },
+            { id: 'FAN-REC1-02', roomId: 'RM-REC1', name: 'Fan 2', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B8:C9:D0:E1:F2:04' },
+            { id: 'FAN-REC1-03', roomId: 'RM-REC1', name: 'Fan 3', type: 'Fan', status: 'ON', powerKw: 0.07, meterType: 'IoT Relay', networkId: 'B8:C9:D0:E1:F2:05' },
+            { id: 'MON-REC1-01', roomId: 'RM-REC1', name: 'Smart Monitor 1', type: 'Smart Monitor', status: 'ON', powerKw: 0.2, meterType: 'Smart Plug', networkId: 'B8:C9:D0:E1:F2:06' },
+            { id: 'LGT-REC1-01', roomId: 'RM-REC1', name: 'Light 1', type: 'Light', status: 'ON', powerKw: 0.4, meterType: 'IoT Relay', networkId: 'B8:C9:D0:E1:F2:07' }
+        ];
+
+        let alerts = [];
+        let isLive = true;
+        let liveInterval = null;
+        let consumptionChart = null;
+
+        // --- STREAMING_CHUNK: AI Rules Engine & Logic ---
+        function analyzeSystem() {
+            alerts = [];
+            let totalKw = 0;
+            let totalWasteKw = 0;
+            let roomsWasting = 0;
+
+            rooms.forEach(room => {
+                let roomWasteScore = 0;
+                let activePower = 0;
+                let recommendations = [];
+                let actionIds = []; 
+                let roomIsWasting = false;
+
+                const roomDevices = devices.filter(d => d.roomId === room.id);
+                
+                // Calculate Load
+                roomDevices.forEach(d => {
+                    if(d.status === 'ON') activePower += d.powerKw;
+                });
+                totalKw += activePower;
+
+                // AI Rules
+                const isAcOn = roomDevices.some(d => d.type === 'AC' && d.status === 'ON');
+                const isLightOn = roomDevices.some(d => d.type === 'Light' && d.status === 'ON');
+                const isPcOn = roomDevices.some(d => d.type === 'Computer' && d.status === 'ON');
+                
+                if (room.occupancy === 0) {
+                    // Critical empty room waste
+                    if (isAcOn) {
+                        roomWasteScore += 40;
+                        roomIsWasting = true;
+                        recommendations.push(`Disable AC in empty ${room.name}`);
+                        actionIds.push(...roomDevices.filter(d => d.type === 'AC').map(d => d.id));
+                        totalWasteKw += roomDevices.filter(d => d.type === 'AC').reduce((sum, d) => sum + d.powerKw, 0);
+                    }
+                    if (isLightOn) {
+                        roomWasteScore += 20;
+                        roomIsWasting = true;
+                        recommendations.push(`Turn off lights in ${room.name}`);
+                        actionIds.push(...roomDevices.filter(d => d.type === 'Light').map(d => d.id));
+                        totalWasteKw += roomDevices.filter(d => d.type === 'Light').reduce((sum, d) => sum + d.powerKw, 0);
+                    }
+                    if (isPcOn) {
+                        roomWasteScore += 20;
+                        roomIsWasting = true;
+                        recommendations.push(`Computers left running in ${room.name}`);
+                        actionIds.push(...roomDevices.filter(d => d.type === 'Computer').map(d => d.id));
+                        totalWasteKw += roomDevices.filter(d => d.type === 'Computer').reduce((sum, d) => sum + d.powerKw, 0);
+                    }
+                    // Specific device logic: Monitors, Mics, Purifiers should be off if empty
+                    const specificTypes = ['Smart Monitor', 'Mic', 'Purifier', 'Fan'];
+                    const specificWasting = roomDevices.filter(d => specificTypes.includes(d.type) && d.status === 'ON');
+                    if (specificWasting.length > 0) {
+                        roomWasteScore += 10;
+                        roomIsWasting = true;
+                        actionIds.push(...specificWasting.map(d => d.id));
+                        totalWasteKw += specificWasting.reduce((sum, d) => sum + d.powerKw, 0);
+                        recommendations.push(`Phantom load detected on Plugs in ${room.name}`);
+                    }
+                } else if (room.occupancy / room.capacity < 0.20) {
+                    // Low occupancy waste
+                    if (isAcOn) {
+                        roomWasteScore += 30;
+                        roomIsWasting = true;
+                        recommendations.push(`High cooling load for low occupancy in ${room.name}`);
+                        // Assuming 50% of AC power is wasted here
+                        totalWasteKw += roomDevices.filter(d => d.type === 'AC').reduce((sum, d) => sum + (d.powerKw * 0.5), 0);
+                    }
+                }
+
+                if(roomIsWasting) roomsWasting++;
+                roomWasteScore = Math.min(roomWasteScore, 100);
+
+                if (roomWasteScore >= 30) {
+                    alerts.push({
+                        roomId: room.id,
+                        roomName: room.name,
+                        message: recommendations.join(' • '),
+                        actions: actionIds,
+                        score: roomWasteScore
+                    });
+                }
+                
+                room.analysis = {
+                    score: roomWasteScore,
+                    recs: recommendations.length ? recommendations : ['System Operating Efficiently']
+                };
+            });
+
+            return { totalKw, totalWasteKw, roomsWasting };
+        }
+
+        // --- STREAMING_CHUNK: Core UI Rendering functions ---
+        function updateUI() {
+            const { totalKw, totalWasteKw, roomsWasting } = analyzeSystem();
+            
+            // Calculate Savings metrics (inflated to hit 700-800 mark based on mock data)
+            const dailyWasteCost = totalWasteKw * DAILY_WASTE_HOURS * ELECTRICITY_RATE;
+            const monthlyCost = dailyWasteCost * 26; // 26 working days
+            const yearlyCost = monthlyCost * 12;
+            
+            const co2Reduction = totalWasteKw * DAILY_WASTE_HOURS * CO2_FACTOR;
+
+            // Update Top Level KPIs
+            animateValue("kpi-daily-savings", parseFloat(document.getElementById("kpi-daily-savings").innerText.replace(/,/g, '')), dailyWasteCost, 500);
+            document.getElementById('kpi-monthly-savings').innerText = monthlyCost.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('kpi-yearly-savings').innerText = yearlyCost.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('kpi-wasted-rooms').innerText = roomsWasting;
+
+            document.getElementById('kpi-load').innerHTML = `${totalKw.toFixed(1)} <span class="text-lg text-slate-400 font-medium">kW</span>`;
+            document.getElementById('kpi-co2').innerHTML = `${co2Reduction.toFixed(1)} <span class="text-lg text-slate-400 font-medium">kg</span>`;
+            document.getElementById('kpi-devices').innerText = devices.length;
+
+            updateChart(totalKw, totalWasteKw);
+
+            renderNotifications();
+            renderDevicesView();
+            renderInsightsView();
+        }
+
+        // --- STREAMING_CHUNK: Chart Logic ---
+        function initChart() {
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            
+            // Create vibrant gradients for visual depth
+            const gradientMain = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientMain.addColorStop(0, 'rgba(109, 40, 217, 0.6)'); // Purple 700
+            gradientMain.addColorStop(1, 'rgba(109, 40, 217, 0.05)');
+            
+            const gradientWaste = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientWaste.addColorStop(0, 'rgba(20, 184, 166, 0.6)'); // Teal 500
+            gradientWaste.addColorStop(1, 'rgba(20, 184, 166, 0.05)');
+
+            // Initial mock timeline for startup
+            const labels = Array.from({length: 12}, (_, i) => `T-${(12-i)*3}s`);
+            
+            // Generate some plausible starting data based on current baseline state
+            let baseLoad = 0;
+            let baseWaste = 0;
+            devices.forEach(d => {
+                if(d.status === 'ON') baseLoad += d.powerKw;
+            });
+            baseWaste = baseLoad * 0.15; 
+            
+            const mockData = Array.from({length: 12}, () => baseLoad + (Math.random() * 2 - 1));
+            const mockWaste = Array.from({length: 12}, () => baseWaste + (Math.random() * 0.5 - 0.25));
+
+            consumptionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Load (kW)',
+                            data: mockData,
+                            borderColor: '#6d28d9', // Purple 700
+                            backgroundColor: gradientMain,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#6d28d9',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4 // Smooth bezier curve
+                        },
+                        {
+                            label: 'Wasted Load (kW)',
+                            data: mockWaste,
+                            borderColor: '#14b8a6', // Teal 500
+                            backgroundColor: gradientWaste,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#14b8a6',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4,
+                            borderDash: [5, 5] // Dashed line for waste
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: false }, // We built a custom legend in HTML above
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { size: 13, family: 'Inter' },
+                            bodyFont: { size: 13, family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#64748b', maxTicksLimit: 6 }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(totalKw, wasteKw) {
+            if(!consumptionChart) return;
+            
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                            now.getMinutes().toString().padStart(2, '0') + ':' + 
+                            now.getSeconds().toString().padStart(2, '0');
+            
+            // Push new dynamic point, shift old ones out
+            consumptionChart.data.labels.push(timeStr);
+            consumptionChart.data.labels.shift();
+            
+            consumptionChart.data.datasets[0].data.push(totalKw);
+            consumptionChart.data.datasets[0].data.shift();
+            
+            consumptionChart.data.datasets[1].data.push(wasteKw);
+            consumptionChart.data.datasets[1].data.shift();
+            
+            consumptionChart.update();
+        }
+
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const val = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = val.toLocaleString('en-IN');
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = Math.floor(end).toLocaleString('en-IN');
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- STREAMING_CHUNK: Notification & Control Logic ---
+        function renderNotifications() {
+            const badge = document.getElementById('notif-badge');
+            const countStr = document.getElementById('notif-count');
+            const list = document.getElementById('notif-list');
+            const dashBanner = document.getElementById('dashboard-alert-container');
+            
+            if (alerts.length > 0) {
+                badge.classList.remove('hidden');
+                countStr.innerText = alerts.length;
+                
+                list.innerHTML = alerts.map(alert => `
+                    <div class="p-4 bg-rose-50/80 hover:bg-rose-100 transition-colors border-l-4 border-rose-600">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-black text-rose-900">${alert.roomName}</p>
+                                <p class="text-xs text-rose-700 mt-1 leading-relaxed font-medium">${alert.message}</p>
+                                <div class="mt-3">
+                                    <button data-actions='${JSON.stringify(alert.actions)}' onclick='executeControl(this)' class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-xs font-bold shadow-md shadow-rose-200/50 transition w-full flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-power-off"></i> Force Override
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Inject giant red banner into Dashboard if alerts exist
+                if (dashBanner) {
+                    dashBanner.innerHTML = `
+                        <div class="bg-gradient-to-r from-rose-600 to-red-500 rounded-3xl p-5 sm:p-6 shadow-lg shadow-rose-200 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 border border-rose-400 animate-fade-in relative overflow-hidden">
+                            <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4 pointer-events-none">
+                                <i class="fa-solid fa-triangle-exclamation text-[160px]"></i>
+                            </div>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl shrink-0 animate-pulse border border-white/30">
+                                    <i class="fa-solid fa-triangle-exclamation text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black tracking-wide uppercase text-white shadow-sm">Critical Energy Waste Detected</h3>
+                                    <p class="text-rose-100 text-sm font-medium mt-0.5">${alerts.length} zone(s) actively consuming unnecessary power. Immediate action recommended.</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleNotifications()" class="relative z-10 shrink-0 bg-white text-rose-700 hover:bg-rose-50 px-6 py-3 rounded-xl text-sm font-black shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 w-full sm:w-auto justify-center">
+                                View Alerts <span class="bg-rose-600 text-white text-[10px] px-2 py-0.5 rounded-full">${alerts.length}</span>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                badge.classList.add('hidden');
+                countStr.innerText = 0;
+                list.innerHTML = `<div class="p-8 text-center text-slate-500 text-sm bg-slate-50 font-medium"><i class="fa-solid fa-check-circle text-4xl text-emerald-500 mb-3 block"></i> All endpoints optimized.</div>`;
+                
+                if (dashBanner) {
+                    dashBanner.innerHTML = '';
+                }
+            }
+        }
+
+        function executeControl(btnElement) {
+            try {
+                // Safely parse the device IDs from the data attribute
+                const deviceIds = JSON.parse(btnElement.getAttribute('data-actions'));
+                
+                // Show visual feedback that the action is processing
+                btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Executing...';
+                btnElement.classList.add('opacity-75', 'pointer-events-none', 'bg-purple-600');
+                btnElement.classList.remove('bg-slate-900', 'hover:bg-slate-800');
+                
+                // Slight delay to allow the user to see the success state before it removes itself
+                setTimeout(() => {
+                    deviceIds.forEach(id => {
+                        const device = devices.find(d => d.id === id);
+                        if (device) device.status = 'OFF';
+                    });
+                    
+                    // Re-calculate the system state (which naturally removes the fixed alert)
+                    updateUI();
+                }, 450);
+                
+            } catch (error) {
+                console.error("Failed to execute override control:", error);
+            }
+        }
+
+        function toggleDeviceStatus(deviceId) {
+            const device = devices.find(d => d.id === deviceId);
+            if(device) {
+                device.status = device.status === 'ON' ? 'OFF' : 'ON';
+                updateUI();
+            }
+        }
+
+        // --- STREAMING_CHUNK: Devices/Matrix View Render ---
+        function renderDevicesView() {
+            const grid = document.getElementById('devices-grid');
+            
+            // Map types to icons and colors
+            const getAsset = (type) => {
+                const map = {
+                    'AC': { icon: 'fa-snowflake', color: 'blue' },
+                    'Fan': { icon: 'fa-fan', color: 'slate' },
+                    'Exhaust Fan': { icon: 'fa-wind', color: 'slate' },
+                    'Fridge': { icon: 'fa-icicles', color: 'cyan' },
+                    'Light': { icon: 'fa-lightbulb', color: 'amber' },
+                    'Computer': { icon: 'fa-desktop', color: 'purple' },
+                    'Server': { icon: 'fa-server', color: 'indigo' },
+                    'Smart Monitor': { icon: 'fa-display', color: 'indigo' },
+                    'Mic': { icon: 'fa-microphone', color: 'slate' },
+                    'Purifier': { icon: 'fa-wind', color: 'teal' },
+                    'Camera': { icon: 'fa-video', color: 'red' },
+                    'Sensor': { icon: 'fa-satellite-dish', color: 'emerald' },
+                    'Meters': { icon: 'fa-gauge-high', color: 'orange' },
+                    'Plugs': { icon: 'fa-plug', color: 'pink' }
+                };
+                return map[type] || { icon: 'fa-plug', color: 'slate' };
+            };
+
+            grid.innerHTML = devices.map(device => {
+                const isOn = device.status === 'ON';
+                const asset = getAsset(device.type);
+                const room = rooms.find(r => r.id === device.roomId);
+                
+                return `
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-${asset.color}-50 text-${asset.color}-500 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid ${asset.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-md font-bold text-slate-800">${device.name || device.type}</h4>
+                                <p class="text-xs font-mono text-slate-400 mt-0.5">${device.id}</p>
+                                <p class="text-[10px] font-mono text-emerald-600 mt-0.5 flex items-center gap-1">
+                                    <i class="fa-solid fa-wifi text-[10px]"></i> ${device.networkId || generateMAC()}
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="toggleDeviceStatus('${device.id}')" class="toggle-bg w-11 h-6 ${isOn ? 'bg-purple-600' : 'bg-slate-300'} rounded-full p-1 flex items-center justify-start cursor-pointer focus:outline-none shrink-0">
+                            <div class="toggle-dot w-4 h-4 bg-white rounded-full shadow-sm transform ${isOn ? 'translate-x-5' : 'translate-x-0'}"></div>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-auto flex justify-between items-center bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">${device.meterType}</p>
+                            <p class="text-xs font-semibold text-slate-700 truncate w-24">${room ? room.name : 'Unknown'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Live Draw</p>
+                            <p class="text-sm font-bold ${isOn ? 'text-rose-600' : 'text-slate-400'}">${isOn ? device.powerKw.toFixed(2) : '0.00'} kW</p>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- STREAMING_CHUNK: Insights View Render ---
+        function renderInsightsView() {
+            const grid = document.getElementById('insights-grid');
+            
+            // Only show rooms with actual waste/alerts for the Insights page
+            const wastingRooms = rooms.filter(r => r.analysis.score >= 30);
+            
+            if (wastingRooms.length === 0) {
+                grid.innerHTML = `<div class="col-span-1 md:col-span-2 bg-emerald-50 border border-emerald-100 rounded-2xl p-8 text-center text-emerald-700 font-medium"><i class="fa-solid fa-leaf text-3xl mb-3 block opacity-80"></i> AI reports zero energy waste across the campus. Custom patterns can still be applied.</div>`;
+                return;
+            }
+
+            grid.innerHTML = wastingRooms.map(room => {
+                return `
+                <div class="bg-white rounded-2xl p-6 border border-rose-200 shadow-sm relative overflow-hidden flex flex-col">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-rose-500 opacity-5 rounded-full blur-xl transform translate-x-1/2 -translate-y-1/2"></div>
+                    <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-800">${room.name}</h4>
+                            <p class="text-xs text-slate-500 mt-1 flex gap-3">
+                                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-medium"><i class="fa-solid fa-users text-slate-400 mr-1"></i> ${room.occupancy}/${room.capacity} Occ.</span>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-rose-400 font-bold uppercase tracking-wider mb-1">AI Waste Score</p>
+                            <p class="text-2xl font-black text-rose-600">${room.analysis.score}<span class="text-sm text-rose-300 font-normal">/100</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-6 flex-1">
+                        ${room.analysis.recs.map(rec => `
+                            <div class="text-sm text-slate-700 flex items-start gap-2">
+                                <i class="fa-solid fa-bolt text-amber-400 mt-0.5"></i> <span>${rec}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="mt-auto bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label class="flex justify-between text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">
+                            <span>Override Occupancy (Simulate)</span>
+                            <span class="text-blue-500">${room.occupancy}</span>
+                        </label>
+                        <input type="range" min="0" max="${room.capacity}" value="${room.occupancy}" 
+                               oninput="updateOccupancy('${room.id}', this.value)" class="w-full appearance-none bg-slate-200 h-2 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer">
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- STREAMING_CHUNK: App Interactions & Simulators ---
+        function updateOccupancy(roomId, val) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                room.occupancy = parseInt(val);
+                updateUI();
+            }
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notif-dropdown').classList.toggle('hidden');
+        }
+
+        function togglePattern(element) {
+            const btn = element.querySelector('.pattern-btn');
+            if (btn.innerText === "Activate Pattern") {
+                btn.innerText = "Active";
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('bg-purple-100', 'text-purple-700');
+                element.classList.add('border-purple-600');
+            } else {
+                btn.innerText = "Activate Pattern";
+                btn.classList.add('bg-slate-900', 'text-white');
+                btn.classList.remove('bg-purple-100', 'text-purple-700');
+                element.classList.remove('border-purple-600');
+            }
+        }
+
+        // Simulate Live Sensor Data stream
+        function toggleLiveSensors() {
+            isLive = !isLive;
+            const dot = document.getElementById('live-dot');
+            const text = document.getElementById('live-text');
+            
+            if (isLive) {
+                dot.classList.add('bg-purple-600', 'live-indicator');
+                dot.classList.remove('bg-slate-300');
+                text.innerText = "Sensors: LIVE";
+                startLiveSimulation();
+            } else {
+                dot.classList.remove('bg-purple-600', 'live-indicator');
+                dot.classList.add('bg-slate-300');
+                text.innerText = "Sensors: PAUSED";
+                clearInterval(liveInterval);
+            }
+        }
+
+        function startLiveSimulation() {
+            clearInterval(liveInterval);
+            liveInterval = setInterval(() => {
+                // Micro-fluctuations in power to simulate live reading noise
+                let updated = false;
+                devices.forEach(d => {
+                    if(d.status === 'ON') {
+                        // Fluctuate by +/- 0.05 kW
+                        const variance = (Math.random() * 0.1) - 0.05;
+                        const original = d.powerKw;
+                        d.powerKw = Math.max(0.1, d.powerKw + variance);
+                        if (Math.abs(original - d.powerKw) > 0.01) updated = true;
+                    }
+                });
+                // only full render if active tab is dashboard or devices to save frame rate
+                if(updated && (document.getElementById('view-dashboard').classList.contains('block') || document.getElementById('view-devices').classList.contains('block'))) {
+                    updateUI();
+                }
+            }, 3000); // update every 3 seconds
+        }
+
+        // --- STREAMING_CHUNK: Modal & Navigation Logic ---
+        function openDeviceModal() {
+            document.getElementById('device-modal').classList.remove('hidden');
+        }
+
+        function closeDeviceModal() {
+            document.getElementById('device-modal').classList.add('hidden');
+        }
+
+        function handleAddDevice(e) {
+            e.preventDefault();
+            const roomName = document.getElementById('modal-room').value;
+            const type = document.getElementById('modal-type').value;
+            const meter = document.getElementById('modal-meter').value;
+            const power = parseFloat(document.getElementById('modal-power').value);
+            const inputNetworkId = document.getElementById('modal-network-id').value;
+            const networkId = inputNetworkId.trim() !== '' ? inputNetworkId : generateMAC();
+            
+            const uniqueId = `${type.substring(0,3).toUpperCase()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+            let room = rooms.find(r => r.name === roomName);
+            
+            // Auto-generate sequential name based on existing devices of same type in the room
+            const existingCount = devices.filter(d => d.roomId === room.id && d.type === type).length;
+            const deviceName = `${type} ${existingCount + 1}`;
+            
+            devices.push({
+                id: uniqueId,
+                roomId: room.id,
+                name: deviceName,
+                type: type,
+                status: 'ON',
+                powerKw: power,
+                meterType: meter,
+                networkId: networkId
+            });
+            
+            closeDeviceModal();
+            updateUI();
+            switchView('devices');
+        }
+
+        function openSensorModal() {
+            document.getElementById('sensor-modal').classList.remove('hidden');
+        }
+
+        function closeSensorModal() {
+            document.getElementById('sensor-modal').classList.add('hidden');
+        }
+
+        function handleAddSensorSet(e) {
+            e.preventDefault();
+            const roomName = document.getElementById('sensor-modal-room').value;
+            const bundleType = document.getElementById('sensor-modal-bundle').value;
+            const inputNetworkId = document.getElementById('sensor-modal-network-id').value;
+            const baseNetworkId = inputNetworkId.trim() !== '' ? inputNetworkId : generateMAC();
+            
+            let room = rooms.find(r => r.name === roomName);
+            
+            if (bundleType === 'Basic Occupancy') {
+                devices.push({ id: `PIR-${Math.floor(Math.random() * 1000)}`, roomId: room.id, name: 'PIR Sensor 1', type: 'Sensor', status: 'ON', powerKw: 0.01, meterType: 'PIR Occupancy', networkId: baseNetworkId + '-A' });
+                devices.push({ id: `LDR-${Math.floor(Math.random() * 1000)}`, roomId: room.id, name: 'Light Sensor 1', type: 'Sensor', status: 'ON', powerKw: 0.01, meterType: 'Ambient Light', networkId: baseNetworkId + '-B' });
+            } else {
+                devices.push({ id: `MMW-${Math.floor(Math.random() * 1000)}`, roomId: room.id, name: 'mmWave Sensor 1', type: 'Sensor', status: 'ON', powerKw: 0.02, meterType: 'mmWave Presence', networkId: baseNetworkId + '-1' });
+                devices.push({ id: `ENV-${Math.floor(Math.random() * 1000)}`, roomId: room.id, name: 'Environment Sensor 1', type: 'Sensor', status: 'ON', powerKw: 0.01, meterType: 'Temp/Humidity/AQI', networkId: baseNetworkId + '-2' });
+            }
+            
+            closeSensorModal();
+            updateUI();
+            switchView('devices');
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.app-view').forEach(v => {
+                v.classList.remove('block');
+                v.classList.add('hidden');
+            });
+
+            const selectedView = document.getElementById('view-' + viewId);
+            if (selectedView) {
+                selectedView.classList.remove('hidden');
+                selectedView.classList.add('block');
+            }
+
+            const titles = {
+                'dashboard': 'Executive Dashboard',
+                'devices': 'Hardware Matrix',
+                'insights': 'Insights & Automation'
+            };
+            document.getElementById('header-title').innerText = titles[viewId];
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-50', 'text-purple-700', 'border-purple-600');
+                btn.classList.add('text-slate-500', 'hover:bg-slate-50', 'border-transparent');
+            });
+
+            const activeBtn = document.getElementById('nav-' + viewId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-500', 'hover:bg-slate-50', 'border-transparent');
+                activeBtn.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-600');
+            }
+            
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+            
+            // Re-render UI to ensure correct heights and animations
+            updateUI();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            initChart();
+            updateUI();
+            startLiveSimulation();
+        };
+    </script>
+</body>
+</html>
